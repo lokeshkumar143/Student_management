@@ -1,0 +1,46 @@
+name: Automated Software Testing CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pytest-and-coverage:
+    name: Pytest Suite & Coverage Gate (>=85%)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest suite with Coverage.py
+        run: |
+          mkdir -p reports
+          coverage run -m pytest --junitxml=reports/test_report.xml -v
+          coverage json -o reports/coverage.json
+          coverage report -m --fail-under=85
+
+      - name: Smoke-test Gunicorn WSGI config
+        run: gunicorn --check-config app:app
+
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-test-and-coverage-reports
+          path: |
+            reports/test_report.xml
+            reports/coverage.json

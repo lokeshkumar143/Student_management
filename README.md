@@ -1,4 +1,7 @@
 # AcadVerify — Student Management System with Automated Software Testing
+
+[![Automated Software Testing CI](https://github.com/lokeshkumar143/Student_management/actions/workflows/ci.yml/badge.svg)](https://github.com/lokeshkumar143/Student_management/actions/workflows/ci.yml)
+
 > **Enterprise Software Testing & Academic Records Platform**  
 > Built with **Python**, **Flask (Blueprints)**, **SQLite**, **Bootstrap 5**, **Pytest**, and **Coverage.py**.
 
@@ -80,4 +83,21 @@ Open `http://127.0.0.1:5001` in your browser.
 - **Username**: `admin`
 - **Password**: `Admin@123`
 - *(Additional QA user: `qa_tester` / `Tester@123`. New accounts can also be created at `/register`, and passwords can be updated at `/profile`.)*
-# Student_management
+
+---
+
+## 4. GitHub Actions CI/CD & Live Deployment (Render)
+
+### GitHub Actions Automated Testing
+Every push or pull request to `main` automatically triggers [ci.yml](.github/workflows/ci.yml), which:
+1. Installs dependencies from `requirements.txt`.
+2. Executes all **127 Pytest tests** (Unit, Integration, BVA, ECP, Regression, Auth/CSRF).
+3. Enforces **&ge; 85% code coverage** via `Coverage.py`.
+4. Smoke-tests the `gunicorn` WSGI server configuration and uploads `test_report.xml` and `coverage.json` as build artifacts.
+
+### Deploy Live via GitHub + Render (Free Tier)
+Because GitHub Pages only hosts static HTML/CSS/JS websites, use **Render** (configured via [render.yaml](render.yaml) and [Procfile](Procfile)) to host the live Python/Flask + SQLite application directly from this GitHub repository:
+1. Sign in to [Render](https://render.com) with your GitHub account.
+2. Click **New +** &rarr; **Blueprint** (or **Web Service**) and select `lokeshkumar143/Student_management`.
+3. Render automatically reads `render.yaml`, installs dependencies, seeds the SQLite database (`seed_data.py`), and starts `gunicorn --bind 0.0.0.0:$PORT app:app`.
+4. Open your live `.onrender.com` URL and sign in with `admin` / `Admin@123`.

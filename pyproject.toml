@@ -1,0 +1,11 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.coverage.run]
+branch = false
+source = ["validators", "models", "app", "security", "routes"]
+
+[tool.coverage.report]
+show_missing = true

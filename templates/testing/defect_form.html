@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == 'edit' %}Edit Defect {{ defect.bug_id }}{% else %}Log New Defect{% endif %} | AcadVerify{% endblock %}
+{% block breadcrumb %}Quality Assurance / {% if mode == 'edit' %}Edit {{ defect.bug_id }}{% else %}Log New Defect{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-enter stagger-1">
+    <div class="col-lg-8">
+        <div class="mb-3">
+            <a href="{{ url_for('testing.list_defects') }}" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Back to Defect Tracker
+            </a>
+        </div>
+
+        <div class="panel overflow-hidden">
+            <div class="panel-header bg-white py-3">
+                <h5 class="fw-bold mb-0 text-dark">
+                    {% if mode == 'edit' %}Update Defect {{ defect.bug_id }}{% else %}Log New Defect{% endif %}
+                </h5>
+                {% if mode == 'edit' %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-code">{{ defect.bug_id }}</span>
+                {% endif %}
+            </div>
+
+            <div class="p-4 p-md-5 bg-white">
+                <form method="POST" action="{% if mode == 'edit' %}{{ url_for('testing.edit_defect', id=defect.id) }}{% else %}{{ url_for('testing.add_defect') }}{% endif %}" data-prevent-double-submit>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    {% if mode == 'add' %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="bug_id" class="form-label fw-semibold small text-dark">Bug ID <span class="text-danger">*</span></label>
+                            <input type="text" name="bug_id" id="bug_id" class="form-control font-code" value="{{ defect.bug_id if defect else 'BUG-101' }}" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="module" class="form-label fw-semibold small text-dark">Affected Module <span class="text-danger">*</span></label>
+                            <select name="module" id="module" class="form-select" required>
+                                <option value="Student Record Management" {% if defect and defect.module == 'Student Record Management' %}selected{% endif %}>Student Record Management</option>
+                                <option value="Input Validation & BVA" {% if defect and defect.module == 'Input Validation & BVA' %}selected{% endif %}>Input Validation &amp; BVA</option>
+                                <option value="Database Integrity & Constraints" {% if defect and defect.module == 'Database Integrity & Constraints' %}selected{% endif %}>Database Integrity &amp; Constraints</option>
+                                <option value="Authentication & Security" {% if defect and defect.module == 'Authentication & Security' %}selected{% endif %}>Authentication &amp; Security</option>
+                                <option value="Automated Test Execution" {% if defect and defect.module == 'Automated Test Execution' %}selected{% endif %}>Automated Test Execution</option>
+                                <option value="Testing Dashboard & Reporting" {% if defect and defect.module == 'Testing Dashboard & Reporting' %}selected{% endif %}>Testing Dashboard &amp; Reporting</option>
+                            </select>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label for="module" class="form-label fw-semibold small text-dark">Affected Module <span class="text-danger">*</span></label>
+                        <input type="text" name="module" id="module" class="form-control" value="{{ defect.module }}" required>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-semibold small text-dark">Defect Summary <span class="text-danger">*</span></label>
+                        <input type="text" name="title" id="title" class="form-control" value="{{ defect.title if defect else '' }}" required>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="severity" class="form-label fw-semibold small text-dark">Severity</label>
+                            <select name="severity" id="severity" class="form-select">
+                                <option value="Critical" {% if defect and defect.severity == 'Critical' %}selected{% endif %}>Critical</option>
+                                <option value="High" {% if defect and defect.severity == 'High' %}selected{% endif %}>High</option>
+                                <option value="Medium" {% if (defect and defect.severity == 'Medium') or not defect %}selected{% endif %}>Medium</option>
+                                <option value="Low" {% if defect and defect.severity == 'Low' %}selected{% endif %}>Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label fw-semibold small text-dark">Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="Open" {% if (defect and defect.status == 'Open') or not defect %}selected{% endif %}>Open</option>
+                                <option value="In Progress" {% if defect and defect.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                <option value="Resolved" {% if defect and defect.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                <option value="Closed" {% if defect and defect.status == 'Closed' %}selected{% endif %}>Closed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold small text-dark">Description <span class="text-danger">*</span></label>
+                        <textarea name="description" id="description" rows="3" class="form-control" required>{{ defect.description if defect else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="steps_to_reproduce" class="form-label fw-semibold small text-dark">Steps to Reproduce</label>
+                        <textarea name="steps_to_reproduce" id="steps_to_reproduce" rows="3" class="form-control font-code small">{{ defect.steps_to_reproduce if defect else '' }}</textarea>
+                    </div>
+
+                    {% if mode == 'add' %}
+                    <div class="mb-3">
+                        <label for="found_by_test" class="form-label fw-semibold small text-dark">Discovered By Test Case</label>
+                        <input type="text" name="found_by_test" id="found_by_test" class="form-control font-code" value="{{ defect.found_by_test if defect and defect.found_by_test else '' }}" placeholder="tests/test_bva.py::test_bva_marks_at_max_boundary">
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label for="resolution_notes" class="form-label fw-semibold small text-dark">Resolution Notes</label>
+                        <textarea name="resolution_notes" id="resolution_notes" rows="2" class="form-control">{{ defect.resolution_notes if defect else '' }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{{ url_for('testing.list_defects') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            {% if mode == 'edit' %}Save Changes{% else %}Record Defect{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

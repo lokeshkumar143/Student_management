@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}QA Specifications &amp; Testing Matrix | AcadVerify{% endblock %}
+{% block breadcrumb %}Quality Assurance / QA Specifications{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 animate-enter stagger-1">
+    <div>
+        <h2 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.02em;">QA Specifications &amp; Testing Techniques</h2>
+        <p class="text-muted mb-0 small">Formal mapping of Black-Box, White-Box, Boundary Value Analysis, Equivalence Partitioning, and Regression test strategies.</p>
+    </div>
+    <a href="{{ url_for('testing.testing_dashboard') }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+        <i class="bi bi-speedometer2"></i>
+        <span>Open Live Test Dashboard</span>
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Boundary Value Analysis -->
+    <div class="col-lg-6 animate-enter stagger-2">
+        <div class="panel h-100 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark">Boundary Value Analysis (BVA)</h5>
+                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle font-code">Marks [0.0 &ndash; 100.0]</span>
+            </div>
+            <p class="text-muted small">Targets boundary edge cases where off-by-one defects occur across numeric marks and field length constraints.</p>
+
+            <div class="p-3 bg-light rounded border mb-3">
+                <div class="d-flex justify-content-between text-muted small font-code mb-1">
+                    <span class="text-danger">&lt; 0 (Invalid)</span>
+                    <span class="text-primary fw-bold">Min: 0.0</span>
+                    <span class="text-success fw-bold">Nominal: 50.0</span>
+                    <span class="text-primary fw-bold">Max: 100.0</span>
+                    <span class="text-danger">&gt; 100 (Invalid)</span>
+                </div>
+                <div class="progress" style="height: 12px; border-radius: 6px;">
+                    <div class="progress-bar bg-danger" style="width: 15%;"></div>
+                    <div class="progress-bar bg-success" style="width: 70%;"></div>
+                    <div class="progress-bar bg-danger" style="width: 15%;"></div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered small align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Boundary Point</th>
+                            <th>Test Value</th>
+                            <th>Expected</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Below Min (<em>Min &minus; 1</em>)</td><td><code>-1.0</code>, <code>-5.0</code></td><td><span class="badge bg-danger">Rejected</span></td></tr>
+                        <tr><td><strong>Min Boundary</strong></td><td><code>0.0</code></td><td><span class="badge bg-success">Accepted (Grade F)</span></td></tr>
+                        <tr><td>Above Min (<em>Min + 1</em>)</td><td><code>1.0</code></td><td><span class="badge bg-success">Accepted</span></td></tr>
+                        <tr><td>Nominal</td><td><code>50.0</code>, <code>75.0</code></td><td><span class="badge bg-success">Accepted</span></td></tr>
+                        <tr><td>Below Max (<em>Max &minus; 1</em>)</td><td><code>99.0</code></td><td><span class="badge bg-success">Accepted (Grade A+)</span></td></tr>
+                        <tr><td><strong>Max Boundary</strong></td><td><code>100.0</code></td><td><span class="badge bg-success">Accepted (Grade A+)</span></td></tr>
+                        <tr><td>Above Max (<em>Max + 1</em>)</td><td><code>101.0</code>, <code>105.0</code></td><td><span class="badge bg-danger">Rejected</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Equivalence Class Partitioning -->
+    <div class="col-lg-6 animate-enter stagger-2">
+        <div class="panel h-100 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark">Equivalence Class Partitioning (ECP)</h5>
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-code">Black-Box</span>
+            </div>
+            <p class="text-muted small">Divides input domains into valid and invalid equivalence classes so representative test values verify complete domain behavior.</p>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered small align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Field</th>
+                            <th>Valid Partition</th>
+                            <th>Invalid Partitions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-semibold">Marks</td>
+                            <td><code>0.0 &le; m &le; 100.0</code></td>
+                            <td><code>&lt; 0</code>, <code>&gt; 100</code>, non-numeric, <code>NaN</code>/<code>Inf</code></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold">Register No</td>
+                            <td>9-digit numeric (e.g. <code>192210378</code>)</td>
+                            <td>&lt;9 or &gt;9 digits, non-numeric, duplicates</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold">Email</td>
+                            <td>Standard RFC email</td>
+                            <td>Missing <code>@</code>, missing domain, spaces</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold">Auth Password</td>
+                            <td>6&ndash;64 chars, letter + digit</td>
+                            <td>&lt;6 chars, letters-only, digits-only</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unit, Integration & Regression -->
+    <div class="col-lg-12 animate-enter stagger-3">
+        <div class="panel p-4">
+            <h5 class="fw-bold mb-3 text-dark">Automated Test Architecture &amp; Coverage Strategy</h5>
+            <div class="row g-4 small">
+                <div class="col-md-4">
+                    <div class="fw-bold text-dark mb-1"><i class="bi bi-cpu text-primary me-1"></i> Unit Testing</div>
+                    <p class="text-muted mb-0">Isolates validation rules in <code>validators.py</code> and SQLite operations in <code>models.py</code> using temporary isolated databases.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="fw-bold text-dark mb-1"><i class="bi bi-diagram-3 text-info me-1"></i> Integration Testing</div>
+                    <p class="text-muted mb-0">Exercises full HTTP workflows across Flask Blueprints, CSRF security checks, authentication guards, CSV exports, and persistence.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="fw-bold text-dark mb-1"><i class="bi bi-arrow-repeat text-success me-1"></i> Regression &amp; Coverage.py</div>
+                    <p class="text-muted mb-0">Verifies resolved defects (marks = 100, case-insensitive duplicate checks, LIKE wildcard escaping) while enforcing &ge; 85% coverage.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

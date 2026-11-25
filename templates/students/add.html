@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Enroll Student | AcadVerify{% endblock %}
+{% block breadcrumb %}Academics / Enroll Student{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-enter stagger-1">
+    <div class="col-lg-8 col-xl-7">
+        <div class="mb-3">
+            <a href="{{ url_for('students.list_students') }}" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Back to Student Directory
+            </a>
+        </div>
+
+        <div class="panel overflow-hidden">
+            <div class="panel-header bg-white py-3">
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">Enroll New Student</h4>
+                    <p class="text-muted small mb-0">Enter student academic details. All fields are strictly validated prior to database storage.</p>
+                </div>
+            </div>
+
+            <div class="p-4 p-md-5 bg-white">
+                <form action="{{ url_for('students.add_student') }}" method="POST" novalidate id="studentForm" data-prevent-double-submit>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="register_number" class="form-label fw-semibold small text-dark">
+                            Register Number <span class="text-danger" aria-hidden="true">*</span>
+                        </label>
+                        <input type="text"
+                               name="register_number"
+                               id="register_number"
+                               class="form-control font-code {% if errors.register_number %}is-invalid{% endif %}"
+                               placeholder="e.g. 192210378"
+                               value="{{ form_data.register_number }}"
+                               inputmode="numeric"
+                               pattern="\d{9}"
+                               minlength="9"
+                               maxlength="9"
+                               autocorrect="off"
+                               autocapitalize="none"
+                               spellcheck="false"
+                               aria-describedby="reg-help"
+                               required>
+                        <div id="reg-help" class="form-text small">Unique 9-digit numeric register number (e.g., <code>192210378</code>).</div>
+                        {% if errors.register_number %}
+                            <div class="invalid-feedback d-block">{{ errors.register_number }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-semibold small text-dark">
+                            Full Name <span class="text-danger" aria-hidden="true">*</span>
+                        </label>
+                        <input type="text"
+                               name="name"
+                               id="name"
+                               class="form-control {% if errors.name %}is-invalid{% endif %}"
+                               placeholder="e.g. Alan Turing"
+                               value="{{ form_data.name }}"
+                               autocomplete="name"
+                               aria-describedby="name-help"
+                               required>
+                        <div id="name-help" class="form-text small">2&ndash;50 alphabetic characters.</div>
+                        {% if errors.name %}
+                            <div class="invalid-feedback d-block">{{ errors.name }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="department" class="form-label fw-semibold small text-dark">
+                            Department <span class="text-danger" aria-hidden="true">*</span>
+                        </label>
+                        <select name="department" id="department" class="form-select {% if errors.department %}is-invalid{% endif %}" required>
+                            <option value="" disabled {% if not form_data.department %}selected{% endif %}>Select department...</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept }}" {% if form_data.department == dept %}selected{% endif %}>{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if errors.department %}
+                            <div class="invalid-feedback d-block">{{ errors.department }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold small text-dark">
+                            Email Address <span class="text-danger" aria-hidden="true">*</span>
+                        </label>
+                        <input type="email"
+                               name="email"
+                               id="email"
+                               class="form-control {% if errors.email %}is-invalid{% endif %}"
+                               placeholder="student@university.edu"
+                               value="{{ form_data.email }}"
+                               autocomplete="email"
+                               autocorrect="off"
+                               autocapitalize="none"
+                               spellcheck="false"
+                               required>
+                        {% if errors.email %}
+                            <div class="invalid-feedback d-block">{{ errors.email }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="marks" class="form-label fw-semibold small text-dark mb-0">
+                                Marks (0 &ndash; 100) <span class="text-danger" aria-hidden="true">*</span>
+                            </label>
+                            <span class="badge bg-light text-muted border font-code">Permitted: 0.0 &ndash; 100.0</span>
+                        </div>
+                        <input type="number"
+                               step="any"
+                               name="marks"
+                               id="marks"
+                               class="form-control font-code {% if errors.marks %}is-invalid{% endif %}"
+                               placeholder="85.5"
+                               value="{{ form_data.marks }}"
+                               aria-describedby="marks-help"
+                               required>
+                        <div id="marks-help" class="form-text small">Enter a numeric score between 0 and 100 inclusive.</div>
+                        {% if errors.marks %}
+                            <div class="invalid-feedback d-block">{{ errors.marks }}</div>
+                        {% endif %}
+
+                        <div id="liveBvaFeedback" class="mt-2 p-2 px-3 rounded-3 small border" style="display: none;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span id="bvaLabel" class="fw-semibold"></span>
+                                <span id="bvaGrade" class="badge"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{{ url_for('students.list_students') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">Save Student Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

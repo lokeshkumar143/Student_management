@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Profile | AcadVerify{% endblock %}
+{% block breadcrumb %}Account / Admin Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4 animate-enter stagger-1">
+    <div class="col-lg-5">
+        <div class="panel p-4 h-100">
+            <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; font-size: 1.25rem;">
+                    {{ user.full_name[:2]|upper }}
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">{{ user.full_name }}</h5>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">{{ user.role }}</span>
+                </div>
+            </div>
+
+            <dl class="row small mb-0 gy-3">
+                <dt class="col-sm-4 text-muted">Username</dt>
+                <dd class="col-sm-8 font-code fw-semibold text-dark">{{ user.username }}</dd>
+
+                <dt class="col-sm-4 text-muted">Email</dt>
+                <dd class="col-sm-8 text-dark">{{ user.email }}</dd>
+
+                <dt class="col-sm-4 text-muted">Last Sign-In</dt>
+                <dd class="col-sm-8 font-code text-secondary">{{ user.last_login or 'Current session' }}</dd>
+
+                <dt class="col-sm-4 text-muted">Created</dt>
+                <dd class="col-sm-8 font-code text-secondary">{{ user.created_at }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="panel p-4">
+            <h5 class="fw-bold text-dark mb-1">Update Password</h5>
+            <p class="text-muted small mb-4">Change your administrator password. Must be 6&ndash;64 characters with at least one letter and one number.</p>
+
+            <form action="{{ url_for('auth.profile') }}" method="POST" novalidate data-prevent-double-submit>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3">
+                    <label for="current_password" class="form-label fw-semibold small text-dark">Current Password <span class="text-danger">*</span></label>
+                    <input type="password" name="current_password" id="current_password" class="form-control {% if errors.current_password %}is-invalid{% endif %}" autocomplete="current-password" required>
+                    {% if errors.current_password %}
+                        <div class="invalid-feedback d-block">{{ errors.current_password }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="new_password" class="form-label fw-semibold small text-dark">New Password <span class="text-danger">*</span></label>
+                        <input type="password" name="new_password" id="new_password" class="form-control {% if errors.new_password %}is-invalid{% endif %}" autocomplete="new-password" minlength="6" required>
+                        {% if errors.new_password %}
+                            <div class="invalid-feedback d-block">{{ errors.new_password }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="confirm_password" class="form-label fw-semibold small text-dark">Confirm New Password <span class="text-danger">*</span></label>
+                        <input type="password" name="confirm_password" id="confirm_password" class="form-control {% if errors.confirm_password %}is-invalid{% endif %}" autocomplete="new-password" required>
+                        {% if errors.confirm_password %}
+                            <div class="invalid-feedback d-block">{{ errors.confirm_password }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary px-4">Save New Password</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

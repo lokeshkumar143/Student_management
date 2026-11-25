@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ defect.bug_id }} | Defect Details{% endblock %}
+{% block breadcrumb %}Quality Assurance / Defect Tracker / {{ defect.bug_id }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-enter stagger-1">
+    <div class="col-lg-9">
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('testing.list_defects') }}" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Back to Defect Tracker
+            </a>
+            <div class="d-flex gap-2">
+                <form action="{{ url_for('testing.trigger_automated_tests') }}" method="POST" class="d-inline" data-prevent-double-submit>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="suite" value="regression">
+                    <button type="submit" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-arrow-repeat me-1"></i> Run Regression Suite
+                    </button>
+                </form>
+                <a href="{{ url_for('testing.edit_defect', id=defect.id) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i> Edit Details
+                </a>
+            </div>
+        </div>
+
+        <!-- Defect Lifecycle Stepper -->
+        <div class="panel p-3 mb-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div class="d-flex align-items-center gap-2 flex-wrap small">
+                    <span class="text-muted fw-semibold me-1">Lifecycle Flow:</span>
+                    {% for stage in ['Open', 'In Progress', 'Resolved', 'Closed'] %}
+                        <span class="badge {% if defect.status == stage %}bg-primary text-white{% else %}bg-light text-muted border{% endif %} px-2 py-1">
+                            {{ loop.index }}. {{ stage }}
+                        </span>
+                        {% if not loop.last %}<i class="bi bi-chevron-right text-muted small"></i>{% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex gap-1 flex-wrap">
+                    {% if defect.status == 'Open' %}
+                        <form action="{{ url_for('testing.transition_defect_status', id=defect.id) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="status" value="In Progress">
+                            <button type="submit" class="btn btn-sm btn-warning text-dark">Start Work</button>
+                        </form>
+                    {% elif defect.status == 'In Progress' %}
+                        <form action="{{ url_for('testing.transition_defect_status', id=defect.id) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="status" value="Resolved">
+                            <button type="submit" class="btn btn-sm btn-success">Mark Resolved</button>
+                        </form>
+                    {% elif defect.status == 'Resolved' %}
+                        <form action="{{ url_for('testing.transition_defect_status', id=defect.id) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="status" value="Closed">
+                            <button type="submit" class="btn btn-sm btn-primary">Verify &amp; Close</button>
+                        </form>
+                    {% else %}
+                        <form action="{{ url_for('testing.transition_defect_status', id=defect.id) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="status" value="Open">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Reopen Defect</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="panel overflow-hidden">
+            <div class="panel-header bg-white py-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-code">{{ defect.bug_id }}</span>
+                        <span class="badge bg-light text-dark border font-code">{{ defect.module }}</span>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-0">{{ defect.title }}</h4>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-dark font-code">{{ defect.severity }}</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ defect.status }}</span>
+                </div>
+            </div>
+
+            <div class="p-4 p-md-5 bg-white">
+                <h6 class="text-muted small text-uppercase fw-bold">Description</h6>
+                <p class="text-dark mb-4">{{ defect.description }}</p>
+
+                {% if defect.steps_to_reproduce %}
+                <h6 class="text-muted small text-uppercase fw-bold">Steps to Reproduce</h6>
+                <pre class="bg-light p-3 rounded border font-code small mb-4">{{ defect.steps_to_reproduce }}</pre>
+                {% endif %}
+
+                {% if defect.resolution_notes %}
+                <h6 class="text-muted small text-uppercase fw-bold">Resolution Notes</h6>
+                <div class="p-3 rounded border bg-success-subtle text-success small mb-4">
+                    {{ defect.resolution_notes }}
+                </div>
+                {% endif %}
+
+                <dl class="row small text-muted mb-0">
+                    <dt class="col-sm-3">Test Reference</dt>
+                    <dd class="col-sm-9 font-code text-dark">{{ defect.found_by_test or 'Manual QA Inspection' }}</dd>
+
+                    <dt class="col-sm-3">Reported On</dt>
+                    <dd class="col-sm-9 font-code">{{ defect.reported_date }}</dd>
+                </dl>
+            </div>
+
+            <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('testing.list_defects') }}" class="btn btn-sm btn-outline-secondary">Return to List</a>
+                <form action="{{ url_for('testing.delete_defect', id=defect.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete Defect</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}System Audit Trail | AcadVerify{% endblock %}
+{% block breadcrumb %}Quality Assurance / Audit Trail{% endblock %}
+
+{% block content %}
+<div class="mb-4 animate-enter stagger-1">
+    <h2 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.02em;">System Audit Trail</h2>
+    <p class="text-muted mb-0 small">Chronological ledger of administrator authentications, student record mutations, test executions, and defect updates.</p>
+</div>
+
+<div class="panel overflow-hidden animate-enter stagger-2">
+    <div class="panel-header">
+        <h6 class="mb-0 fw-bold text-dark" id="audit-caption">Recent Activity Events</h6>
+        <span class="badge bg-light text-muted border font-code">Last {{ logs|length }} events</span>
+    </div>
+    <div tabindex="0" role="region" aria-labelledby="audit-caption" class="table-wrapper">
+        <table class="table table-enterprise">
+            <thead>
+                <tr>
+                    <th class="ps-4">Timestamp</th>
+                    <th>Actor</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th class="pe-4">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if logs %}
+                    {% for log in logs %}
+                    <tr>
+                        <td class="ps-4 font-code small text-muted">{{ log.created_at }}</td>
+                        <td class="font-code fw-semibold text-dark small">{{ log.actor }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border font-code">{{ log.action }}</span>
+                        </td>
+                        <td class="small text-secondary font-code">{{ log.entity_type }}{% if log.entity_id %} #{{ log.entity_id }}{% endif %}</td>
+                        <td class="pe-4 small text-secondary">{{ log.details or '' }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted small">No audit events recorded yet.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

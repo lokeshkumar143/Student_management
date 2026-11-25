@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Defect Tracker | AcadVerify{% endblock %}
+{% block breadcrumb %}Quality Assurance / Defect Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 animate-enter stagger-1">
+    <div>
+        <h2 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.02em;">Defect &amp; Bug Tracker</h2>
+        <p class="text-muted mb-0 small">Record, prioritize, and monitor software defects through resolution and regression closure.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('testing.add_defect') }}" class="btn btn-danger d-inline-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i>
+            <span>Log New Defect</span>
+        </a>
+    </div>
+</div>
+
+<!-- Metrics Row -->
+<div class="row g-3 mb-4 animate-enter stagger-2">
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="panel panel-interactive p-3 h-100">
+            <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Total Logged</span>
+            <h3 class="fw-bold my-1 text-dark font-code" data-count="{{ defect_stats.total }}">{{ defect_stats.total }}</h3>
+            <span class="text-muted small">All defects</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="panel panel-interactive p-3 h-100">
+            <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Open</span>
+            <h3 class="fw-bold my-1 text-danger font-code" data-count="{{ defect_stats.open }}">{{ defect_stats.open }}</h3>
+            <span class="text-muted small">Awaiting fix</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="panel panel-interactive p-3 h-100">
+            <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">In Progress</span>
+            <h3 class="fw-bold my-1 text-warning font-code" data-count="{{ defect_stats.in_progress }}">{{ defect_stats.in_progress }}</h3>
+            <span class="text-muted small">Active work</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="panel panel-interactive p-3 h-100">
+            <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Resolved</span>
+            <h3 class="fw-bold my-1 text-success font-code" data-count="{{ defect_stats.resolved }}">{{ defect_stats.resolved }}</h3>
+            <span class="text-muted small">Fix implemented</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="panel panel-interactive p-3 h-100">
+            <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Closed</span>
+            <h3 class="fw-bold my-1 text-primary font-code" data-count="{{ defect_stats.closed }}">{{ defect_stats.closed }}</h3>
+            <span class="text-muted small">Verified</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="panel panel-interactive p-3 h-100">
+            <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Critical</span>
+            <h3 class="fw-bold my-1 text-danger font-code" data-count="{{ defect_stats.critical }}">{{ defect_stats.critical }}</h3>
+            <span class="text-muted small">Blocker priority</span>
+        </div>
+    </div>
+</div>
+
+<!-- Semantic Filter -->
+<div class="panel p-3 mb-4 animate-enter stagger-3">
+    <search>
+        <form method="GET" action="{{ url_for('testing.list_defects') }}" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label for="statusFilter" class="form-label small text-muted fw-semibold mb-1">Lifecycle Status</label>
+                <select id="statusFilter" name="status" class="form-select no-valid-ring">
+                    <option value="All" {% if status_filter == 'All' %}selected{% endif %}>All Statuses</option>
+                    <option value="Open" {% if status_filter == 'Open' %}selected{% endif %}>Open</option>
+                    <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="Closed" {% if status_filter == 'Closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label for="severityFilter" class="form-label small text-muted fw-semibold mb-1">Severity Level</label>
+                <select id="severityFilter" name="severity" class="form-select no-valid-ring">
+                    <option value="All" {% if severity_filter == 'All' %}selected{% endif %}>All Severities</option>
+                    <option value="Critical" {% if severity_filter == 'Critical' %}selected{% endif %}>Critical</option>
+                    <option value="High" {% if severity_filter == 'High' %}selected{% endif %}>High</option>
+                    <option value="Medium" {% if severity_filter == 'Medium' %}selected{% endif %}>Medium</option>
+                    <option value="Low" {% if severity_filter == 'Low' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-dark w-100">Filter</button>
+            </div>
+        </form>
+    </search>
+</div>
+
+<!-- Defect Table -->
+<div class="panel overflow-hidden animate-enter stagger-4">
+    <div class="panel-header">
+        <h6 class="mb-0 fw-bold text-dark" id="defects-caption">Recorded Defects</h6>
+        <span class="badge bg-light text-muted border font-code">{{ defects|length }} items</span>
+    </div>
+    <div tabindex="0" role="region" aria-labelledby="defects-caption" class="table-wrapper">
+        <table class="table table-enterprise">
+            <thead>
+                <tr>
+                    <th class="ps-4">Bug ID</th>
+                    <th>Summary</th>
+                    <th>Affected Module</th>
+                    <th class="text-center">Severity</th>
+                    <th class="text-center">Status</th>
+                    <th>Test Reference</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if defects %}
+                    {% for defect in defects %}
+                    <tr>
+                        <td class="ps-4">
+                            <a href="{{ url_for('testing.view_defect', id=defect.id) }}" class="badge bg-danger-subtle text-danger border border-danger-subtle font-code fw-bold text-decoration-none">
+                                {{ defect.bug_id }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('testing.view_defect', id=defect.id) }}" class="fw-semibold text-dark text-decoration-none d-block">{{ defect.title }}</a>
+                            <span class="text-muted small text-truncate d-inline-block" style="max-width: 340px;">{{ defect.description }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border font-code small">{{ defect.module }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if defect.severity == 'Critical' %}
+                                <span class="badge bg-danger font-code">Critical</span>
+                            {% elif defect.severity == 'High' %}
+                                <span class="badge bg-warning text-dark font-code">High</span>
+                            {% elif defect.severity == 'Medium' %}
+                                <span class="badge bg-info text-dark font-code">Medium</span>
+                            {% else %}
+                                <span class="badge bg-secondary font-code">Low</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if defect.status == 'Open' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Open</span>
+                            {% elif defect.status == 'In Progress' %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">In Progress</span>
+                            {% elif defect.status == 'Resolved' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Resolved</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Closed</span>
+                            {% endif %}
+                        </td>
+                        <td class="small font-code text-muted">{{ defect.found_by_test or 'Manual QA' }}</td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('testing.view_defect', id=defect.id) }}" class="btn btn-outline-secondary" title="View Defect">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('testing.edit_defect', id=defect.id) }}" class="btn btn-outline-primary" title="Edit Defect">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form action="{{ url_for('testing.delete_defect', id=defect.id) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-danger" title="Delete Defect">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-check2-circle fs-1 d-block mb-2 text-success opacity-50"></i>
+                            <div class="fw-semibold text-dark">No defects match the current filter</div>
+                            <p class="small mb-3">All matching quality checks are clear.</p>
+                            <a href="{{ url_for('testing.add_defect') }}" class="btn btn-sm btn-outline-danger">Log a New Defect</a>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

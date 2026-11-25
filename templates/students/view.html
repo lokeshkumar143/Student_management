@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.name }} | Student Profile{% endblock %}
+{% block breadcrumb %}Academics / {{ student.register_number }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-enter stagger-1">
+    <div class="col-lg-8 col-xl-7">
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('students.list_students') }}" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Back to Student Directory
+            </a>
+            <a href="{{ url_for('students.edit_student', id=student.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil me-1"></i> Edit Record
+            </a>
+        </div>
+
+        <div class="panel overflow-hidden">
+            <div class="auth-hero-panel p-4 p-md-5">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-3">
+                    <div>
+                        <span class="badge bg-white bg-opacity-10 text-white font-code mb-2 px-2 py-1">{{ student.register_number }}</span>
+                        <h2 class="fw-bold mb-1">{{ student.name }}</h2>
+                        <div class="text-white-50 small d-flex align-items-center gap-2">
+                            <i class="bi bi-building"></i>
+                            <span>{{ student.department }}</span>
+                        </div>
+                    </div>
+                    <div class="text-sm-end bg-white bg-opacity-10 p-3 rounded-3 border border-white border-opacity-10">
+                        <div class="fs-2 fw-bold font-code lh-1 mb-1">{{ "%.2f"|format(student.marks) }}</div>
+                        <span class="badge bg-white text-dark fw-bold px-2 py-1">Grade: {{ grade }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 p-md-5 bg-white">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span class="text-muted fw-semibold">Academic Score Progress</span>
+                        <span class="font-code fw-bold text-dark">{{ "%.2f"|format(student.marks) }} / 100.00</span>
+                    </div>
+                    <div class="progress" style="height: 10px; border-radius: 6px; background-color: #e2e8f0;">
+                        <div class="progress-bar progress-bar-animated-width {% if student.marks >= 80 %}bg-success{% elif student.marks >= 50 %}bg-primary{% else %}bg-danger{% endif %}"
+                             role="progressbar"
+                             style="width: {{ student.marks }}%;"
+                             aria-valuenow="{{ student.marks }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <dl class="row g-3 mb-0 small">
+                    <div class="col-sm-6">
+                        <dt class="text-muted text-uppercase" style="font-size: 0.72rem;">Email Address</dt>
+                        <dd class="mt-1 mb-0">
+                            <a href="mailto:{{ student.email }}" class="text-decoration-none fw-semibold text-dark">{{ student.email }}</a>
+                        </dd>
+                    </div>
+                    <div class="col-sm-6">
+                        <dt class="text-muted text-uppercase" style="font-size: 0.72rem;">Academic Standing</dt>
+                        <dd class="mt-1 mb-0">
+                            {% if student.marks >= 50 %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Passing Standing
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Academic Review Needed
+                                </span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="col-sm-6">
+                        <dt class="text-muted text-uppercase" style="font-size: 0.72rem;">Enrolled Timestamp</dt>
+                        <dd class="mt-1 mb-0 font-code text-secondary">{{ student.created_at }}</dd>
+                    </div>
+                    <div class="col-sm-6">
+                        <dt class="text-muted text-uppercase" style="font-size: 0.72rem;">Last Modified</dt>
+                        <dd class="mt-1 mb-0 font-code text-secondary">{{ student.updated_at }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('students.list_students') }}" class="btn btn-sm btn-outline-secondary">Return to Directory</a>
+                <form action="{{ url_for('students.delete_student', id=student.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash me-1"></i> Delete Student
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

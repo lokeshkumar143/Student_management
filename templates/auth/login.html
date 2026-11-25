@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | AcadVerify{% endblock %}
+
+{% block auth_content %}
+<div class="row justify-content-center animate-enter stagger-1">
+    <div class="col-lg-10 col-xl-9">
+        <div class="panel overflow-hidden shadow-sm border-0" style="border-radius: 16px;">
+            <div class="row g-0">
+                <!-- Left Institutional Context Panel -->
+                <div class="col-md-5 auth-hero-panel p-4 p-lg-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded bg-white bg-opacity-10 small font-code mb-3">
+                            <span class="status-dot status-dot-success"></span>
+                            <span>Administrator Access</span>
+                        </div>
+                        <h2 class="fw-bold mb-3" style="letter-spacing: -0.02em;">Student Management &amp; Automated QA</h2>
+                        <p class="text-white-50 small mb-4 lh-base">
+                            Centralized platform for student record administration, input integrity verification, automated Pytest execution, code coverage analysis, and defect management.
+                        </p>
+
+                        <div class="d-flex flex-column gap-2 small text-white-50">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-check2 text-info"></i>
+                                <span>Validated student CRUD &amp; CSV reporting</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-check2 text-info"></i>
+                                <span>Pytest unit, integration, BVA, ECP &amp; regression</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-check2 text-info"></i>
+                                <span>Coverage.py telemetry &amp; defect lifecycle tracking</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top border-white border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-white-50 small fw-semibold">Default Admin Account</span>
+                            <button type="button" class="btn btn-xs btn-outline-light py-0 px-2" style="font-size: 0.72rem;" id="fillDemoCredentialsBtn">
+                                Use Credentials
+                            </button>
+                        </div>
+                        <div class="font-code small text-white-50">
+                            User: <span class="text-white">admin</span> &middot; Pass: <span class="text-white">Admin@123</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sign In Form -->
+                <div class="col-md-7 bg-white p-4 p-lg-5 d-flex flex-column justify-content-center">
+                    <div class="mb-4">
+                        <h3 class="fw-bold text-dark mb-1">Administrator Sign In</h3>
+                        <p class="text-muted small mb-0">Authenticate to manage student records and QA pipelines.</p>
+                    </div>
+
+                    {% if errors.auth %}
+                        <div class="alert alert-danger d-flex align-items-center gap-2 py-2 small" role="alert">
+                            <i class="bi bi-exclamation-octagon-fill"></i>
+                            <span>{{ errors.auth }}</span>
+                        </div>
+                    {% endif %}
+
+                    <form action="{{ url_for('auth.login') }}" method="POST" novalidate id="loginForm" data-prevent-double-submit>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="next" value="{{ next_url }}">
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label fw-semibold text-dark small">
+                                Username <span class="text-danger" aria-hidden="true">*</span>
+                            </label>
+                            <input type="text"
+                                   name="username"
+                                   id="username"
+                                   class="form-control font-code {% if errors.username %}is-invalid{% endif %}"
+                                   placeholder="admin"
+                                   value="{{ username }}"
+                                   autocomplete="username"
+                                   autocorrect="off"
+                                   autocapitalize="none"
+                                   spellcheck="false"
+                                   required>
+                            {% if errors.username %}
+                                <div class="invalid-feedback">{{ errors.username }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold text-dark small">
+                                Password <span class="text-danger" aria-hidden="true">*</span>
+                            </label>
+                            <div class="input-group has-validation">
+                                <input type="password"
+                                       name="password"
+                                       id="password"
+                                       class="form-control {% if errors.password %}is-invalid{% endif %}"
+                                       placeholder="Enter your password"
+                                       autocomplete="current-password"
+                                       required>
+                                <button class="btn btn-outline-secondary" type="button" data-toggle-password="password" aria-pressed="false" aria-label="Show password">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                {% if errors.password %}
+                                    <div class="invalid-feedback">{{ errors.password }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            Sign In
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <span class="text-muted small">Need an administrator account?</span>
+                        <a href="{{ url_for('auth.register') }}" class="text-decoration-none fw-semibold small ms-1">Create Account</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

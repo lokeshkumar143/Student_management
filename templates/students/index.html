@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Student Directory | AcadVerify{% endblock %}
+{% block breadcrumb %}Academics / Student Directory{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 animate-enter stagger-1">
+    <div>
+        <h2 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.02em;">Student Directory</h2>
+        <p class="text-muted mb-0 small">Manage academic records, validate scores, and export institutional rosters.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('students.export_students_csv', search=search_query, department=selected_dept) }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-download"></i>
+            <span>Export CSV</span>
+        </a>
+        <a href="{{ url_for('students.add_student') }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-person-plus"></i>
+            <span>Enroll Student</span>
+        </a>
+    </div>
+</div>
+
+<!-- KPI Summary Row -->
+<div class="row g-3 mb-4 animate-enter stagger-2">
+    <div class="col-sm-6 col-xl-3">
+        <div class="panel panel-interactive p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">Total Enrolled</span>
+                    <h3 class="fw-bold my-1 text-dark" data-count="{{ total_students }}">{{ total_students }}</h3>
+                    <span class="text-muted small">Active SQLite records</span>
+                </div>
+                <div class="kpi-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="panel panel-interactive p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">Class Average</span>
+                    <h3 class="fw-bold my-1 text-success" data-count="{{ avg_marks }}" data-decimals="1" data-suffix="%">{{ avg_marks }}%</h3>
+                    <span class="text-muted small">Mean score (0&ndash;100)</span>
+                </div>
+                <div class="kpi-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="panel panel-interactive p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">Passing Standing</span>
+                    <h3 class="fw-bold my-1 text-primary" data-count="{{ pass_count }}">{{ pass_count }}</h3>
+                    <span class="text-muted small">Score &ge; 50.0 (Grade D+)</span>
+                </div>
+                <div class="kpi-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="panel panel-interactive p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">Academic Review</span>
+                    <h3 class="fw-bold my-1 text-warning" data-count="{{ fail_count }}">{{ fail_count }}</h3>
+                    <span class="text-muted small">Score &lt; 50.0 (Grade F)</span>
+                </div>
+                <div class="kpi-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-exclamation-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Semantic Search & Filter Panel -->
+<div class="panel p-3 mb-4 animate-enter stagger-3">
+    <search>
+        <form method="GET" action="{{ url_for('students.list_students') }}" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <label for="searchInput" class="visually-hidden">Search students</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+                    <input type="search" id="searchInput" name="search" class="form-control no-valid-ring" placeholder="Search by Register No (e.g. 192210378), Name, or Email..." value="{{ search_query }}" autocorrect="off" autocapitalize="none" spellcheck="false">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label for="deptFilter" class="visually-hidden">Filter by department</label>
+                <select id="deptFilter" name="department" class="form-select no-valid-ring">
+                    <option value="All" {% if selected_dept == 'All' %}selected{% endif %}>All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-dark w-100 d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-funnel"></i>
+                    <span>Apply Filter</span>
+                </button>
+                {% if search_query or (selected_dept and selected_dept != 'All') %}
+                    <a href="{{ url_for('students.list_students') }}" class="btn btn-outline-secondary" title="Clear Filters" aria-label="Clear Filters">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </search>
+</div>
+
+<!-- Accessible Student Table Panel -->
+<div class="panel overflow-hidden animate-enter stagger-4">
+    <div class="panel-header bg-white">
+        <div class="d-flex align-items-center gap-2">
+            <h6 class="mb-0 fw-bold text-dark" id="student-table-caption">Enrolled Students</h6>
+            <span class="badge bg-light text-secondary border font-code">{{ total_matching }} matching</span>
+        </div>
+        <span class="text-muted small font-code">Page {{ page }} of {{ total_pages }}</span>
+    </div>
+
+    <div tabindex="0" role="region" aria-labelledby="student-table-caption" class="table-wrapper">
+        <table class="table table-enterprise">
+            <thead>
+                <tr>
+                    {% set next_dir = 'asc' if sort_dir == 'desc' else 'desc' %}
+                    <th class="ps-4">
+                        <a class="sort-link" href="{{ url_for('students.list_students', search=search_query, department=selected_dept, sort='register_number', dir=next_dir if sort_by=='register_number' else 'asc') }}">
+                            Register No
+                            {% if sort_by == 'register_number' %}<i class="bi bi-chevron-{{ 'up' if sort_dir == 'asc' else 'down' }}"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a class="sort-link" href="{{ url_for('students.list_students', search=search_query, department=selected_dept, sort='name', dir=next_dir if sort_by=='name' else 'asc') }}">
+                            Student Name
+                            {% if sort_by == 'name' %}<i class="bi bi-chevron-{{ 'up' if sort_dir == 'asc' else 'down' }}"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a class="sort-link" href="{{ url_for('students.list_students', search=search_query, department=selected_dept, sort='department', dir=next_dir if sort_by=='department' else 'asc') }}">
+                            Department
+                            {% if sort_by == 'department' %}<i class="bi bi-chevron-{{ 'up' if sort_dir == 'asc' else 'down' }}"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th>Email Address</th>
+                    <th class="text-center">
+                        <a class="sort-link justify-content-center" href="{{ url_for('students.list_students', search=search_query, department=selected_dept, sort='marks', dir=next_dir if sort_by=='marks' else 'desc') }}">
+                            Marks
+                            {% if sort_by == 'marks' %}<i class="bi bi-chevron-{{ 'up' if sort_dir == 'asc' else 'down' }}"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th class="text-center">Grade</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if students %}
+                    {% for student in students %}
+                        {% set grade = student.marks|calculate_grade %}
+                        <tr>
+                            <td class="ps-4">
+                                <a href="{{ url_for('students.view_student', id=student.id) }}" class="badge bg-light text-primary border font-code fw-semibold text-decoration-none">
+                                    {{ student.register_number }}
+                                </a>
+                            </td>
+                            <td class="fw-semibold text-dark">{{ student.name }}</td>
+                            <td>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fw-medium">{{ student.department }}</span>
+                            </td>
+                            <td>
+                                <a href="mailto:{{ student.email }}" class="text-decoration-none text-muted small">{{ student.email }}</a>
+                            </td>
+                            <td class="text-center font-code fw-bold {% if student.marks >= 50 %}text-success{% else %}text-danger{% endif %}">
+                                {{ "%.2f"|format(student.marks) }}
+                            </td>
+                            <td class="text-center">
+                                {% if grade in ['A+', 'A'] %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">{{ grade }}</span>
+                                {% elif grade in ['B', 'C'] %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">{{ grade }}</span>
+                                {% elif grade == 'D' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">{{ grade }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">{{ grade }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('students.view_student', id=student.id) }}" class="btn btn-outline-secondary" title="View Profile" aria-label="View {{ student.name }}">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('students.edit_student', id=student.id) }}" class="btn btn-outline-primary" title="Edit Student" aria-label="Edit {{ student.name }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ student.id }}" title="Delete Student" aria-label="Delete {{ student.name }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Delete Confirmation Modal -->
+                                <div class="modal fade" id="deleteModal{{ student.id }}" tabindex="-1" aria-labelledby="modalLabel{{ student.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content border-0 shadow" style="border-radius: 12px;">
+                                            <div class="modal-header border-bottom">
+                                                <h5 class="modal-title fs-6 fw-bold text-dark" id="modalLabel{{ student.id }}">
+                                                    Confirm Record Deletion
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body text-start p-4">
+                                                <p class="text-secondary small mb-3">Are you sure you want to permanently remove this student record?</p>
+                                                <div class="p-3 bg-light rounded border">
+                                                    <div class="fw-bold text-dark">{{ student.name }}</div>
+                                                    <div class="small text-muted font-code">{{ student.register_number }} &bull; {{ student.department }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer bg-light border-top py-2">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('students.delete_student', id=student.id) }}" method="POST" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger">Delete Record</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-folder-x fs-1 d-block mb-2 opacity-50"></i>
+                            <div class="fw-semibold text-dark">No student records found</div>
+                            <p class="small mb-3">
+                                {% if search_query or selected_dept != 'All' %}
+                                    Adjust your search query or department filter to view records.
+                                {% else %}
+                                    Begin by enrolling your first student record.
+                                {% endif %}
+                            </p>
+                            <a href="{{ url_for('students.add_student') }}" class="btn btn-sm btn-primary">Enroll Student</a>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="p-3 bg-white border-top d-flex justify-content-between align-items-center">
+        <span class="text-muted small">Showing page {{ page }} of {{ total_pages }}</span>
+        <nav aria-label="Student pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('students.list_students', search=search_query, department=selected_dept, sort=sort_by, dir=sort_dir, page=page-1) }}">Previous</a>
+                </li>
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('students.list_students', search=search_query, department=selected_dept, sort=sort_by, dir=sort_dir, page=p) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('students.list_students', search=search_query, department=selected_dept, sort=sort_by, dir=sort_dir, page=page+1) }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}System Overview &amp; Workflow | AcadVerify{% endblock %}
+{% block breadcrumb %}Workspace / Overview &amp; Flow{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 animate-enter stagger-1">
+    <div>
+        <h2 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.02em;">Operations &amp; QA Workflow</h2>
+        <p class="text-muted mb-0 small">Follow the end-to-end pipeline from student record intake through automated verification and defect sign-off.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('students.add_student') }}" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-person-plus"></i>
+            <span>Step 1: Enroll Student</span>
+        </a>
+        <form action="{{ url_for('testing.trigger_automated_tests') }}" method="POST" class="d-inline" data-prevent-double-submit>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                <i class="bi bi-play-fill"></i>
+                <span>Step 2: Run Automated Tests</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- End-to-End 3-Stage Connected Flow Pipeline -->
+<div class="row g-4 mb-4 animate-enter stagger-2">
+    <!-- Stage 1 -->
+    <div class="col-lg-4">
+        <div class="panel panel-interactive h-100 p-4 d-flex flex-column justify-content-between" style="border-top: 3px solid var(--brand-primary);">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-code">Stage 1</span>
+                    <i class="bi bi-arrow-right text-muted d-none d-lg-inline"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Student Record Management</h5>
+                <p class="text-muted small mb-3">Enroll, search, sort, and update student profiles with strict 9-digit register number and 0&ndash;100 score validation.</p>
+
+                <div class="row g-2 mb-3 text-center">
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="fw-bold font-code text-dark fs-5" data-count="{{ total_students }}">{{ total_students }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">Students</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="fw-bold font-code text-success fs-5" data-count="{{ avg_marks }}" data-decimals="1">{{ avg_marks }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">Avg Score</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="fw-bold font-code text-primary fs-5" data-count="{{ pass_count }}">{{ pass_count }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">Passing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 pt-3 border-top">
+                <a href="{{ url_for('students.list_students') }}" class="btn btn-sm btn-outline-dark flex-grow-1">Open Directory</a>
+                <a href="{{ url_for('students.add_student') }}" class="btn btn-sm btn-primary">Enroll New</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stage 2 -->
+    <div class="col-lg-4">
+        <div class="panel panel-interactive h-100 p-4 d-flex flex-column justify-content-between" style="border-top: 3px solid var(--semantic-success);">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle font-code">Stage 2</span>
+                    <i class="bi bi-arrow-right text-muted d-none d-lg-inline"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Automated Test Execution</h5>
+                <p class="text-muted small mb-3">Execute Pytest unit, integration, boundary value (BVA), equivalence partitioning (ECP), and regression suites.</p>
+
+                {% if latest_run %}
+                <div class="row g-2 mb-3 text-center">
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="fw-bold font-code text-dark fs-5" data-count="{{ latest_run.total_tests }}">{{ latest_run.total_tests }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">Total Tests</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="fw-bold font-code text-success fs-5" data-count="{{ latest_run.passed }}">{{ latest_run.passed }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">Passed</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="fw-bold font-code fs-5" style="color: var(--brand-indigo);" data-count="{{ latest_run.coverage_percent }}" data-decimals="1" data-suffix="%">{{ latest_run.coverage_percent }}%</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">Coverage</div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="p-3 bg-light rounded border small text-muted mb-3">No test execution recorded yet. Trigger the suite to generate coverage metrics.</div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-2 pt-3 border-top">
+                <a href="{{ url_for('testing.testing_dashboard') }}" class="btn btn-sm btn-outline-dark flex-grow-1">QA Dashboard</a>
+                <a href="{{ url_for('testing.testing_methodology') }}" class="btn btn-sm btn-outline-secondary">Specs</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stage 3 -->
+    <div class="col-lg-4">
+        <div class="panel panel-interactive h-100 p-4 d-flex flex-column justify-content-between" style="border-top: 3px solid var(--brand-indigo);">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-code">Stage 3</span>
+                    {% if test_summary and test_summary.criteria_met and defect_stats.open == 0 %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">Release Ready</span>
+                    {% else %}
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Active QA</span>
+                    {% endif %}
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Defect Tracking &amp; Sign-Off</h5>
+                <p class="text-muted small mb-3">Track bug lifecycles from discovery through regression verification, and review system audit history.</p>
+
+                <div class="row g-2 mb-3 text-center">
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="fw-bold font-code text-dark fs-5" data-count="{{ defect_stats.total }}">{{ defect_stats.total }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">Defects</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="fw-bold font-code {% if defect_stats.open > 0 %}text-danger{% else %}text-success{% endif %} fs-5" data-count="{{ defect_stats.open }}">{{ defect_stats.open }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">Open</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="fw-bold font-code text-success fs-5" data-count="{{ defect_stats.resolved + defect_stats.closed }}">{{ defect_stats.resolved + defect_stats.closed }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">Verified</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 pt-3 border-top">
+                <a href="{{ url_for('testing.list_defects') }}" class="btn btn-sm btn-outline-dark flex-grow-1">Defect Tracker</a>
+                <a href="{{ url_for('testing.audit_logs') }}" class="btn btn-sm btn-outline-secondary">Audit Trail</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent System Activity Stream -->
+<div class="panel overflow-hidden animate-enter stagger-3">
+    <div class="panel-header">
+        <div>
+            <h6 class="mb-0 fw-bold text-dark" id="overview-audit-caption">Recent Activity Flow</h6>
+            <small class="text-muted">Latest administrator actions across records, test runs, and defect transitions.</small>
+        </div>
+        <a href="{{ url_for('testing.audit_logs') }}" class="btn btn-sm btn-outline-secondary">Full Audit Trail</a>
+    </div>
+    <div tabindex="0" role="region" aria-labelledby="overview-audit-caption" class="table-wrapper">
+        <table class="table table-enterprise">
+            <thead>
+                <tr>
+                    <th class="ps-4">Timestamp</th>
+                    <th>Actor</th>
+                    <th>Action</th>
+                    <th>Target</th>
+                    <th class="pe-4">Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_logs %}
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td class="ps-4 font-code small text-muted">{{ log.created_at }}</td>
+                        <td class="font-code fw-semibold text-dark small">{{ log.actor }}</td>
+                        <td><span class="badge bg-light text-dark border font-code">{{ log.action }}</span></td>
+                        <td class="font-code small text-secondary">{{ log.entity_type }}{% if log.entity_id %} #{{ log.entity_id }}{% endif %}</td>
+                        <td class="pe-4 small text-secondary">{{ log.details or '' }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted small">No activity recorded yet. Start by enrolling a student or running the test suite.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

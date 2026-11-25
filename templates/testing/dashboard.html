@@ -1,0 +1,441 @@
+{% extends "base.html" %}
+
+{% block title %}Automated Testing &amp; Coverage | AcadVerify{% endblock %}
+{% block breadcrumb %}Quality Assurance / Test &amp; Coverage{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4 animate-enter stagger-1">
+    <div>
+        <h2 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.02em;">Automated Testing Dashboard</h2>
+        <p class="text-muted mb-0 small">Execute Pytest suites, monitor Coverage.py metrics, and evaluate release quality gates.</p>
+    </div>
+
+    <form action="{{ url_for('testing.trigger_automated_tests') }}" method="POST" id="mainDashboardTestForm" class="d-flex flex-wrap align-items-center gap-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="suiteSelector" class="visually-hidden">Select test suite</label>
+        <select name="suite" id="suiteSelector" class="form-select form-select-sm no-valid-ring" style="width: auto; min-height: 38px;">
+            <option value="all" selected>Full Suite (All Tests)</option>
+            <option value="bva">Boundary Value Analysis (BVA)</option>
+            <option value="ecp">Equivalence Partitioning (ECP)</option>
+            <option value="unit">Unit Tests (Models &amp; Validators)</option>
+            <option value="integration">Integration Tests</option>
+            <option value="regression">Regression Suite</option>
+            <option value="auth">Authentication &amp; Security</option>
+        </select>
+
+        {% if test_results %}
+        <a href="{{ url_for('testing.export_test_report_csv') }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" style="min-height: 38px;">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            <span>Export CSV</span>
+        </a>
+        {% endif %}
+
+        <button type="submit" class="btn btn-sm btn-primary px-3 d-inline-flex align-items-center gap-2" id="execMainTestsBtn" style="min-height: 38px;">
+            <i class="bi bi-play-fill"></i>
+            <span>Run Automated Tests Now</span>
+        </button>
+    </form>
+</div>
+
+<div id="liveRunStatusBanner" class="d-none" role="status" aria-live="polite"></div>
+
+{% if test_results %}
+    <!-- KPI Row -->
+    <div class="row g-3 mb-4 animate-enter stagger-2">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="panel panel-interactive p-3 h-100">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Total Tests</span>
+                <h3 class="fw-bold my-1 text-dark font-code" data-count="{{ test_results.total_tests }}">{{ test_results.total_tests }}</h3>
+                <span class="text-muted small">Scope: <span class="font-code">{{ test_results.suite|default('all') }}</span></span>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="panel panel-interactive p-3 h-100">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Passed</span>
+                <h3 class="fw-bold my-1 text-success font-code" data-count="{{ test_results.passed }}">{{ test_results.passed }}</h3>
+                <span class="text-success small fw-semibold">{{ test_results.pass_rate }}% pass rate</span>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="panel panel-interactive p-3 h-100">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Failed</span>
+                <h3 class="fw-bold my-1 font-code {% if test_results.failed > 0 %}text-danger{% else %}text-secondary{% endif %}" data-count="{{ test_results.failed }}">{{ test_results.failed }}</h3>
+                <span class="small {% if test_results.failed > 0 %}text-danger fw-semibold{% else %}text-muted{% endif %}">
+                    {% if test_results.failed > 0 %}Action required{% else %}Zero failures{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="panel panel-interactive p-3 h-100">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Code Coverage</span>
+                <h3 class="fw-bold my-1 font-code" style="color: var(--brand-indigo);" data-count="{{ test_results.coverage.overall_percent }}" data-decimals="1" data-suffix="%">{{ test_results.coverage.overall_percent }}%</h3>
+                <span class="text-muted small">{{ test_results.coverage.total_covered }}/{{ test_results.coverage.total_statements }} stmts</span>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="panel panel-interactive p-3 h-100">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Duration</span>
+                <h3 class="fw-bold my-1 text-dark font-code" data-count="{{ test_results.duration }}" data-decimals="2" data-suffix="s">{{ test_results.duration }}s</h3>
+                <span class="text-muted small">Pytest runtime</span>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="panel panel-interactive p-3 h-100">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Release Gate</span>
+                <div class="my-2">
+                    {% if test_results.criteria_met %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-bold">
+                            <i class="bi bi-patch-check-fill me-1"></i>APPROVED
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fw-bold">
+                            <i class="bi bi-x-circle-fill me-1"></i>BLOCKED
+                        </span>
+                    {% endif %}
+                </div>
+                <span class="text-muted small">Quality criteria</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Quality Gate Row -->
+    <div class="row g-4 mb-4 animate-enter stagger-3">
+        <div class="col-lg-4">
+            <div class="panel h-100">
+                <div class="panel-header">
+                    <h6 class="fw-bold mb-0 text-dark">Test Outcomes</h6>
+                    <span class="badge bg-light text-muted border font-code">{{ test_results.pass_rate }}%</span>
+                </div>
+                <div class="p-4 d-flex flex-column align-items-center">
+                    <div style="position: relative; height: 175px; width: 175px;">
+                        <canvas id="testOutcomeChart"></canvas>
+                    </div>
+                    <div class="d-flex justify-content-around w-100 mt-3 pt-3 border-top text-center small">
+                        <div>
+                            <span class="text-success fw-semibold">Passed</span>
+                            <div class="fw-bold font-code">{{ test_results.passed }}</div>
+                        </div>
+                        <div>
+                            <span class="text-danger fw-semibold">Failed</span>
+                            <div class="fw-bold font-code">{{ test_results.failed }}</div>
+                        </div>
+                        <div>
+                            <span class="text-muted fw-semibold">Skipped</span>
+                            <div class="fw-bold font-code">{{ test_results.skipped }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="panel h-100">
+                <div class="panel-header">
+                    <h6 class="fw-bold mb-0 text-dark">Defect Status</h6>
+                    <a href="{{ url_for('testing.list_defects') }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;">Open Tracker</a>
+                </div>
+                <div class="p-4 d-flex flex-column align-items-center">
+                    <div style="position: relative; height: 175px; width: 175px;">
+                        <canvas id="defectStatusChart"></canvas>
+                    </div>
+                    <div class="d-flex justify-content-around w-100 mt-3 pt-3 border-top text-center small">
+                        <div>
+                            <span class="text-danger fw-semibold">Open</span>
+                            <div class="fw-bold font-code">{{ defect_stats.open }}</div>
+                        </div>
+                        <div>
+                            <span class="text-warning fw-semibold">In Prog</span>
+                            <div class="fw-bold font-code">{{ defect_stats.in_progress }}</div>
+                        </div>
+                        <div>
+                            <span class="text-success fw-semibold">Resolved</span>
+                            <div class="fw-bold font-code">{{ defect_stats.resolved }}</div>
+                        </div>
+                        <div>
+                            <span class="text-primary fw-semibold">Closed</span>
+                            <div class="fw-bold font-code">{{ defect_stats.closed }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="panel h-100 overflow-hidden">
+                <div class="panel-header">
+                    <h6 class="fw-bold mb-0 text-dark">Test Completion Criteria</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-enterprise mb-0 small">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Criterion</th>
+                                <th>Target</th>
+                                <th class="text-end pe-3">Gate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for crit in test_results.criteria %}
+                            <tr>
+                                <td class="ps-3 fw-semibold text-dark">{{ crit.name }}</td>
+                                <td class="font-code small text-muted">{{ crit.target }}</td>
+                                <td class="text-end pe-3">
+                                    {% if crit.status == 'Passed' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Met</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Failed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code Coverage Breakdown -->
+    <div class="panel overflow-hidden mb-4 animate-enter stagger-4">
+        <div class="panel-header">
+            <div class="d-flex align-items-center gap-2">
+                <h6 class="mb-0 fw-bold text-dark" id="cov-table-caption">Code Coverage Breakdown</h6>
+                <span class="badge bg-light text-muted border font-code">Coverage.py</span>
+            </div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-code">
+                Overall: {{ test_results.coverage.overall_percent }}%
+            </span>
+        </div>
+        <div tabindex="0" role="region" aria-labelledby="cov-table-caption" class="table-wrapper">
+            <table class="table table-enterprise">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Source Module</th>
+                        <th class="text-center">Statements</th>
+                        <th class="text-center">Covered</th>
+                        <th class="text-center">Missed</th>
+                        <th>Uncovered Line Numbers</th>
+                        <th style="width: 24%;">Coverage</th>
+                        <th class="text-end pe-4">%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in test_results.coverage.files %}
+                    <tr>
+                        <td class="ps-4 font-code fw-semibold text-dark">{{ f.filename }}</td>
+                        <td class="text-center font-code">{{ f.statements }}</td>
+                        <td class="text-center font-code text-success fw-semibold">{{ f.covered }}</td>
+                        <td class="text-center font-code {% if f.missing > 0 %}text-warning fw-semibold{% else %}text-muted{% endif %}">{{ f.missing }}</td>
+                        <td class="font-code small text-muted">{{ f.missing_lines_preview or 'None' }}</td>
+                        <td>
+                            <div class="progress" style="height: 8px; border-radius: 4px; background-color: #e2e8f0;">
+                                <div class="progress-bar progress-bar-animated-width {% if f.percent >= 90 %}bg-success{% elif f.percent >= 75 %}bg-primary{% else %}bg-warning{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ f.percent }}%;"
+                                     aria-valuenow="{{ f.percent }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"></div>
+                            </div>
+                        </td>
+                        <td class="text-end pe-4 font-code fw-bold {% if f.percent >= 85 %}text-success{% else %}text-warning{% endif %}">
+                            {{ f.percent }}%
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Test Monitoring History -->
+    {% if recent_runs %}
+    <div class="panel overflow-hidden mb-4 animate-enter stagger-4">
+        <div class="panel-header">
+            <h6 class="mb-0 fw-bold text-dark" id="history-caption">Test Monitoring &amp; Execution History</h6>
+            <span class="badge bg-light text-muted border font-code">Last {{ recent_runs|length }} runs</span>
+        </div>
+        <div tabindex="0" role="region" aria-labelledby="history-caption" class="table-wrapper">
+            <table class="table table-enterprise">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Run ID</th>
+                        <th>Executed At</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center">Passed</th>
+                        <th class="text-center">Failed</th>
+                        <th class="text-center">Duration</th>
+                        <th class="text-end pe-4">Coverage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in recent_runs %}
+                    <tr>
+                        <td class="ps-4 font-code text-muted">#{{ run.id }}</td>
+                        <td class="font-code small">{{ run.run_timestamp }}</td>
+                        <td class="text-center font-code fw-semibold">{{ run.total_tests }}</td>
+                        <td class="text-center font-code text-success fw-semibold">{{ run.passed }}</td>
+                        <td class="text-center font-code {% if run.failed > 0 %}text-danger fw-semibold{% else %}text-muted{% endif %}">{{ run.failed }}</td>
+                        <td class="text-center font-code text-muted">{{ run.duration }}s</td>
+                        <td class="text-end pe-4 font-code fw-bold {% if run.coverage_percent >= 85 %}text-success{% else %}text-warning{% endif %}">{{ run.coverage_percent }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Test Case Matrix -->
+    <div class="panel overflow-hidden animate-enter stagger-4">
+        <div class="panel-header flex-column flex-lg-row align-items-lg-center">
+            <div>
+                <h6 class="mb-0 fw-bold text-dark" id="matrix-caption">Test Case Execution Matrix ({{ test_results.total_tests }})</h6>
+                <small class="text-muted">Filter by software testing methodology or search test identifiers.</small>
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-2">
+                <label for="testSearchInput" class="visually-hidden">Search test cases</label>
+                <input type="search" id="testSearchInput" class="form-control form-control-sm font-code no-valid-ring" placeholder="Search test name..." style="max-width: 210px; min-height: 34px;" autocorrect="off" autocapitalize="none" spellcheck="false">
+                <div class="btn-group btn-group-sm" role="group" id="filterBtnGroup">
+                    <button type="button" class="btn btn-outline-secondary active" data-filter-type="all">All</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter-type="bva">BVA</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter-type="ecp">ECP</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter-type="unit">Unit</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter-type="integration">Integration</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter-type="regression">Regression</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter-type="auth">Auth</button>
+                </div>
+            </div>
+        </div>
+
+        <div tabindex="0" role="region" aria-labelledby="matrix-caption" class="table-wrapper">
+            <table class="table table-enterprise" id="testTable">
+                <thead>
+                    <tr>
+                        <th class="ps-4">#</th>
+                        <th>Test Case</th>
+                        <th>Technique</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Time</th>
+                        <th>Outcome</th>
+                        <th class="text-end pe-4">Defect Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tc in test_results.test_cases %}
+                    <tr class="test-row" data-type="{{ tc.type|lower }}" data-name="{{ tc.name|lower }}">
+                        <td class="ps-4 font-code text-muted small">{{ loop.index }}</td>
+                        <td>
+                            <div class="font-code fw-semibold text-dark small">{{ tc.name }}</div>
+                            <div class="font-code text-muted" style="font-size: 0.72rem;">{{ tc.file }}</div>
+                        </td>
+                        <td>
+                            {% if 'bva' in tc.type|lower %}
+                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle font-code">BVA</span>
+                            {% elif 'ecp' in tc.type|lower %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-code">ECP</span>
+                            {% elif 'authentication' in tc.type|lower %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-code">Auth</span>
+                            {% elif 'integration' in tc.type|lower %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-code">Integration</span>
+                            {% elif 'regression' in tc.type|lower %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-code">Regression</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border font-code">Unit</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if tc.status == 'Passed' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Passed</span>
+                            {% elif tc.status == 'Failed' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Failed</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">{{ tc.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center font-code small text-muted">{{ tc.duration }}s</td>
+                        <td class="small text-secondary">
+                            <span class="d-inline-block text-truncate" style="max-width: 340px;" title="{{ tc.message }}">{{ tc.message }}</span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('testing.add_defect', test=tc.file ~ '::' ~ tc.name, title='Issue in ' ~ tc.name) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;">
+                                Log Defect
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="panel p-5 text-center animate-enter">
+        <i class="bi bi-play-circle text-primary fs-1 mb-3 d-block"></i>
+        <h4 class="fw-bold text-dark">No Automated Test Execution Results Recorded Yet</h4>
+        <p class="text-muted mx-auto small" style="max-width: 540px;">
+            Run the Pytest suite to evaluate Unit, Integration, Boundary Value Analysis, Equivalence Class Partitioning, and Regression tests alongside Coverage.py telemetry.
+        </p>
+        <form action="{{ url_for('testing.trigger_automated_tests') }}" method="POST" class="mt-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary px-4">Execute Automated Pytest Suite</button>
+        </form>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if test_results %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const ctxOutcome = document.getElementById('testOutcomeChart')?.getContext('2d');
+    if (ctxOutcome) {
+        new Chart(ctxOutcome, {
+            type: 'doughnut',
+            data: {
+                labels: ['Passed', 'Failed', 'Skipped'],
+                datasets: [{
+                    data: [{{ test_results.passed }}, {{ test_results.failed }}, {{ test_results.skipped }}],
+                    backgroundColor: ['#059669', '#dc2626', '#94a3b8'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '72%'
+            }
+        });
+    }
+
+    const ctxDefect = document.getElementById('defectStatusChart')?.getContext('2d');
+    if (ctxDefect) {
+        new Chart(ctxDefect, {
+            type: 'doughnut',
+            data: {
+                labels: ['Open', 'In Progress', 'Resolved', 'Closed'],
+                datasets: [{
+                    data: [{{ defect_stats.open }}, {{ defect_stats.in_progress }}, {{ defect_stats.resolved }}, {{ defect_stats.closed }}],
+                    backgroundColor: ['#dc2626', '#d97706', '#059669', '#2563eb'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '72%'
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
